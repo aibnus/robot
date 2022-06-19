@@ -1,0 +1,57 @@
+<launch>
+  <!-- Odom Publisher and IMU from Arduino --> 
+  <!-- Subscribe: /cmd_vel -->
+  <!-- Publish: /odom, /imu -->
+  <!-- <arg name="port"    default="/dev/ttyACM0"/>
+  <arg name="baud"    default="57600"/>
+
+  <node name="rosserial" pkg="rosserial_python" type="serial_node.py" output="screen">
+      <param name="port"  type="string"   value="$(arg port)"/>
+      <param name="baud"  type="int"      value="$(arg baud)"/>
+  </node> -->
+
+
+  <!-- Extended Kalman Filter from robot_pose_ekf Node-->
+  <!-- Subscribe: /odom, /imu -->
+  <!-- Publish: /odometry/filtered -->
+  <node pkg="robot_localization" type="ekf_localization_node" name="ekf_se" clear_params="true">
+    <rosparam command="load"           file="$(find robot_navigation)/param/ekf_localization.yaml" />
+  </node>
+
+
+  <!-- Add AMCL example for differential drive robots for Localization -->
+  <!-- Subscribe: /scan, /tf, /initialpose, /map -->
+  <!-- Publish: /amcl_pose, /particlecloud, /tf -->
+  <!-- <include file="$(find robot_navigation)/launch/amcl.launch"/> -->
+
+
+  <!-- Move Base Node -->
+  <!-- Subscribe: /tf, /map, /scan, /odom, /move_base_simple/goal -->
+  <!-- Publish: /cmd_vel -->
+  <!-- Use backward capability -->
+  <!-- <arg name="move_forward_only" default="false"/>
+
+  <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+    <rosparam file="$(find robot_navigation)/param/costmap_common_params.yaml" command="load" ns="global_costmap" />
+    <rosparam file="$(find robot_navigation)/param/costmap_common_params.yaml" command="load" ns="local_costmap" />
+
+    <rosparam file="$(find robot_navigation)/param/local_costmap_params.yaml" command="load" />
+    <rosparam file="$(find robot_navigation)/param/global_costmap_params.yaml" command="load" />
+    <rosparam file="$(find robot_navigation)/param/base_local_planner_params.yaml" command="load" />
+  </node> -->
+
+
+  <!-- RVIZ Visualization -->
+  <arg name="model" default="$(find robot_description)/urdf/robot.xacro"/>
+  <arg name="rvizconfig" default="$(find robot_gazebo)/rviz/urdf.rviz"/>
+
+  <param name="robot_description" command="$(find xacro)/xacro $(arg model)"/>
+  
+  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher"/>
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"/>
+
+  <node name="rviz" pkg="rviz" args="-d $(arg rvizconfig)" type="rviz" required="true"/>
+
+  <!-- Keyboard Teleop -->
+  <node name="teleop_twist_keyboard" pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py" output="screen"/>
+</launch>
